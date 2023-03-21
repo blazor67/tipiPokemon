@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Type Effectiveness</title>
+    <!-- Aggiungi questo link per includere FontAwesome per le icone -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-8Cx7lga8GNw5OzjD1Ml9Xf7oNpNWHyt1i19L1l4zv7lA2EoWXb/2Q3Wq3y6M2mLsa3J6E3pW8Gv6zRd6gJjFhA==" crossorigin="anonymous" referrerpolicy="no-referrer"
+    />
+
+
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #333333;
+            color: #d7d7d7;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        select {
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1.5rem;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            appearance: none;
+        }
+        
+        button {
+            font-size: 1rem;
+            padding: 0.5rem 1.5rem;
+            background-color: #3f51b5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        button:hover {
+            background-color: #283593;
+        }
+        
+        #output {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        .tremore {
+            animation: tremore 0.5s ease-in-out;
+        }
+        
+        @keyframes tremore {
+            0% {
+                transform: translate(0px, 0px) rotate(0deg);
+            }
+            20% {
+                transform: translate(-10px, 0px) rotate(-5deg);
+            }
+            40% {
+                transform: translate(10px, 0px) rotate(5deg);
+            }
+            60% {
+                transform: translate(-10px, 0px) rotate(-5deg);
+            }
+            80% {
+                transform: translate(10px, 0px) rotate(5deg);
+            }
+            100% {
+                transform: translate(0px, 0px) rotate(0deg);
+            }
+        }
+        
+        .type-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            color: white;
+            text-transform: uppercase;
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+            label {
+                font-size: 1rem;
+            }
+            select {
+                font-size: 0.9rem;
+                padding: 0.5rem 0.75rem;
+            }
+            button {
+                font-size: 0.9rem;
+                padding: 0.5rem 1.25rem;
+            }
+            #output {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Pokémon Type Effectiveness</h1>
+    <form>
+        <label for="attackingType">Attacking Type:</label>
+        <select id="attackingType">
+      <!-- Add Pokémon types here -->
+    </select>
+        <label for="defendingType1">Defending Type 1:</label>
+        <select id="defendingType1">
+      <!-- Add Pokémon types here -->
+    </select>
+        <label for="defendingType2">Defending Type 2 (optional):</label>
+        <select id="defendingType2">
+      <option value="">None</option>
+      <!-- Add Pokémon types here -->
+    </select>
+        <button type="button" id="calculateEffectiveness">Calculate Effectiveness</button>
+    </form>
+    <p id="output"></p>
+
+    <script>
+        // Add your getTypeEffectiveness function here
+        async function getTypeEffectiveness(attackingType, defendingType1, defendingType2 = null) {
+            const pokeAPI = 'https://pokeapi.co/api/v2/';
+            const typeURL = `${pokeAPI}type/${attackingType.toLowerCase()}`;
+
+            try {
+                const response = await fetch(typeURL);
+                const data = await response.json();
+                let effectiveness1 = 1;
+                let effectiveness2 = 1;
+
+                for (const relation of data.damage_relations.double_damage_to) {
+                    if (relation.name === defendingType1.toLowerCase()) {
+                        effectiveness1 *= 2;
+                    }
+                    if (defendingType2 && relation.name === defendingType2.toLowerCase()) {
+                        effectiveness2 *= 2;
+                    }
+                }
+
+                for (const relation of data.damage_relations.half_damage_to) {
+                    if (relation.name === defendingType1.toLowerCase()) {
+                        effectiveness1 *= 0.5;
+                    }
+                    if (defendingType2 && relation.name === defendingType2.toLowerCase()) {
+                        effectiveness2 *= 0.5;
+                    }
+                }
+
+                for (const relation of data.damage_relations.no_damage_to) {
+                    if (relation.name === defendingType1.toLowerCase()) {
+                        effectiveness1 *= 0;
+                    }
+                    if (defendingType2 && relation.name === defendingType2.toLowerCase()) {
+                        effectiveness2 *= 0;
+                    }
+                }
+
+                const totalEffectiveness = effectiveness1 * effectiveness2;
+                return totalEffectiveness;
+
+            } catch (error) {
+                console.error('Error fetching type data:', error);
+                return null;
+            }
+        }
+
+
+        async function populateTypes() {
+            const pokeAPI = 'https://pokeapi.co/api/v2/type';
+            const typeDropdowns = document.querySelectorAll('#attackingType, #defendingType1, #defendingType2');
+            const typeColors = {
+                normal: '#A8A77A',
+                fire: '#EE8130',
+                water: '#6390F0',
+                electric: '#F7D02C',
+                grass: '#7AC74C',
+                ice: '#96D9D6',
+                fighting: '#C22E28',
+                poison: '#A33EA1',
+                ground: '#E2BF65',
+                flying: '#A98FF3',
+                psychic: '#F95587',
+                bug: '#A6B91A',
+                rock: '#B6A136',
+                ghost: '#735797',
+                dragon: '#6F35FC',
+                dark: '#705746',
+                steel: '#B7B7CE',
+                fairy: '#D685AD',
+            };
+
+            try {
+                const response = await fetch(pokeAPI);
+                const data = await response.json();
+
+                for (const type of data.results) {
+                    const option = document.createElement('option');
+                    option.value = type.name;
+                    option.textContent = type.name.charAt(0).toUpperCase() + type.name.slice(1);
+
+
+                    const typeIcon = document.createElement('span');
+                    const iconName = type.name.toLowerCase();
+                    const iconURL = `https://veekun.com/dex/media/types/en/${iconName}.png`;
+
+                    typeIcon.className = 'type-icon';
+                    typeIcon.style.backgroundColor = typeColors[type.name];
+                    typeIcon.textContent = type.name.charAt(0);
+
+                    const img = new Image();
+                    img.src = iconURL;
+                    img.onload = () => {
+                        typeIcon.textContent = '';
+                        typeIcon.appendChild(img);
+                    };
+                    img.onerror = () => {
+                        if (isLight(typeColors[type.name])) {
+                            typeIcon.style.color = '#333';
+                        }
+                    };
+
+                    option.style.backgroundImage = `url('${iconURL}')`;
+                    option.style.backgroundColor = typeColors[type.name];
+                    option.style.backgroundSize = '1.5rem';
+                    option.style.backgroundRepeat = 'no-repeat';
+                    option.style.backgroundPosition = '0.5rem center';
+                    option.style.paddingLeft = '2.5rem';
+                    option.style.color = isLight(typeColors[type.name]) ? '#333' : 'white';
+
+                    typeDropdowns.forEach(dropdown => dropdown.add(option.cloneNode(true)));
+                }
+            } catch (error) {
+                console.error('Error fetching type data:', error);
+            }
+        }
+
+        // Aggiungi questa funzione helper
+        function isLight(color) {
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+            return luminance > 0.5;
+        }
+
+        document.getElementById('calculateEffectiveness').addEventListener('click', async() => {
+            const attackingType = document.getElementById('attackingType').value;
+            const defendingType1 = document.getElementById('defendingType1').value;
+            const defendingType2 = document.getElementById('defendingType2').value;
+            const output = document.getElementById('output');
+
+            try {
+                const effectiveness = await getTypeEffectiveness(attackingType, defendingType1, defendingType2);
+                let risultato;
+                switch (effectiveness) {
+                    case 1:
+                        risultato = "😐 Normal";
+                        break;
+                    case 2:
+                        risultato = "😎 Supereffective";
+                        break;
+                    case 4:
+                        risultato = "🤯 4x Supereffective";
+                        break;
+                    case 0.5:
+                        risultato = "😒 Not Very Effective";
+                        break;
+                    case 0:
+                        risultato = "😭 Doesn't have any effect...";
+                        break;
+
+                    default:
+                        "";
+                        break;
+                }
+                output.textContent = `${risultato}`;
+                output.classList.add("tremore");
+                setTimeout(() => {
+                    output.classList.remove("tremore");
+                }, 500);
+            } catch (error) {
+                console.error('Error:', error);
+                output.textContent = 'An error occurred while calculating effectiveness.';
+            }
+        });
+
+        populateTypes();
+    </script>
+</body>
+
+</html>
